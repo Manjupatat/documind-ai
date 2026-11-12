@@ -1,11 +1,11 @@
-
 import os
+import re
 
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.services.vector_store import vector_store
-
+from app.services.reranker_service import reranker_service
 
 load_dotenv()
 
@@ -14,17 +14,28 @@ class RAGPipeline:
 
     def __init__(self):
 
-        api_key = os.getenv("GOOGLE_API_KEY")
+        self._llm = None
 
-        if not api_key or api_key == "your_gemini_api_key":
-            raise ValueError(
-                "Please configure GOOGLE_API_KEY in .env"
+    @property
+    def llm(self):
+
+        if self._llm is None:
+
+            api_key = os.getenv("GOOGLE_API_KEY")
+
+            if not api_key or api_key == "your_gemini_api_key":
+                raise ValueError(
+                    "Please configure GOOGLE_API_KEY in .env"
+                )
+
+            print("Initializing Gemini client...")
+
+            self._llm = ChatGoogleGenerativeAI(
+                model="gemini-3.5-flash-lite",
+                google_api_key=api_key
             )
 
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-3.5-flash-lite",
-            google_api_key=api_key
-        )
+        return self._llm
 
     def retrieve_documents(
         self,
@@ -32,24 +43,62 @@ class RAGPipeline:
         top_k: int = 3,
         document_id: str | None = None
     ):
-
-        return vector_store.search(
+        # Step 1: Retrieve more candidates from Chroma.
+        candidate_documents = vector_store.search(
             query=question,
-            k=top_k,
+            k=max(10, top_k),
             document_id=document_id
         )
 
+        if not candidate_documents:
+            return []
+
+        # Step 2: Rerank candidates using the cross-encoder.
+        reranked_results = reranker_service.rerank(
+            query=question,
+            documents=candidate_documents,
+            top_n=top_k
+        )
+
+        # Step 3: Return only the selected documents.
+        return [
+            document
+            for document, score in reranked_results
+        ]
+
+    
     def build_context(self, documents):
 
         context_parts = []
+        sources = []
+        source_mapping = {}
 
         for doc in documents:
 
             source = doc.metadata.get("source", "Unknown")
             page = doc.metadata.get("page", "Unknown")
+            doc_id = doc.metadata.get("document_id")
+
+            # Identify a unique source by document and page.
+            source_key = (source, page, doc_id)
+
+            if source_key not in source_mapping:
+
+                source_id = f"S{len(sources) + 1}"
+                source_mapping[source_key] = source_id
+
+                sources.append({
+                    "source_id": source_id,
+                    "source": source,
+                    "page": page,
+                    "document_id": doc_id
+                })
+
+            source_id = source_mapping[source_key]
 
             context_parts.append(
                 f"""
+                [{source_id}]
                 Source: {source}
                 Page: {page}
 
@@ -58,23 +107,51 @@ class RAGPipeline:
                 """
             )
 
-        return "\n\n".join(context_parts)
+        context = "\n\n".join(context_parts)
 
-    def generate_answer(self, question: str, context: str):
+        return context, sources
+
+    def extract_response_text(self, response):
+
+        content = response.content
+
+        if isinstance(content, str):
+            return content
+
+        if isinstance(content, list):
+
+            return "\n".join(
+                block.get("text", "")
+                for block in content
+                if isinstance(block, dict)
+                and block.get("type") == "text"
+            )
+
+        return str(content)
+
+    def generate_answer(
+        self,
+        question: str,
+        context: str,
+        valid_source_ids: set
+    ):
 
         prompt = f"""
         You are DocuMind AI, an intelligent document assistant.
 
         Answer the user's question using ONLY the provided context.
 
-        Rules:
-        1. Do not invent information.
-        2. If the answer is not present in the context,
-           clearly say that the uploaded document does not
-           contain enough information to answer.
-        3. Provide a clear and concise answer.
-        4. Cite sources using the filename and page number.
-        5. Never invent page numbers or citations.
+        RULES:
+        1. Never invent information.
+        2. If the answer is not available in the context,
+           clearly say that the document does not contain
+           enough information.
+        3. Cite factual claims using the source IDs provided,
+           such as [S1] or [S2].
+        4. Only use source IDs that appear in the context.
+        5. Do not invent filenames, page numbers, or citations.
+        6. Keep the answer clear and concise.
+        7. If information is unavailable, do not guess.
 
         DOCUMENT CONTEXT:
         {context}
@@ -87,16 +164,27 @@ class RAGPipeline:
 
         response = self.llm.invoke(prompt)
 
-        # Handle both string and block-based response content.
-        if isinstance(response.content, str):
-            return response.content
+        answer = self.extract_response_text(response)
 
-        return "\n".join(
-            block["text"]
-            for block in response.content
-            if isinstance(block, dict)
-            and block.get("type") == "text"
+        # Validate citations against retrieved source IDs.
+        cited_ids = set(
+            re.findall(r"\[S\d+\]", answer)
         )
+
+        valid_tags = {
+            f"[{source_id}]"
+            for source_id in valid_source_ids
+        }
+
+        for citation in cited_ids:
+
+            if citation not in valid_tags:
+                answer = answer.replace(
+                    citation,
+                    "[unverified citation]"
+                )
+
+        return answer
 
     def ask(
         self,
@@ -121,33 +209,18 @@ class RAGPipeline:
                 "sources": []
             }
 
-        context = self.build_context(documents)
+        context, sources = self.build_context(documents)
+
+        valid_source_ids = {
+            source["source_id"]
+            for source in sources
+        }
 
         answer = self.generate_answer(
             question=question,
-            context=context
+            context=context,
+            valid_source_ids=valid_source_ids
         )
-
-        # Collect unique source references.
-        sources = []
-        seen = set()
-
-        for doc in documents:
-
-            source = doc.metadata.get("source")
-            page = doc.metadata.get("page")
-            doc_id = doc.metadata.get("document_id")
-
-            source_key = (source, page, doc_id)
-
-            if source_key not in seen:
-                seen.add(source_key)
-
-                sources.append({
-                    "source": source,
-                    "page": page,
-                    "document_id": doc_id
-                })
 
         return {
             "question": question,
