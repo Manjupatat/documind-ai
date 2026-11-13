@@ -2,7 +2,7 @@
 # Environment variables and secrets
 .env
 .env.*
-.env.example
+!.env.example
 
 # Python virtual environment
 .venv/
@@ -15,10 +15,12 @@ __pycache__/
 # Test cache
 .pytest_cache/
 
-# Generated data
-data/uploads/
-data/chroma_db/
+# Generated data and local database backups
+data/
 
 # IDE settings
 .vscode/
 .idea/
+
+# Logs
+*.log
