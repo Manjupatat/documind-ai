@@ -1,104 +1,109 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocuMind AI - PDF Assistant</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
     <div class="app-container">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-icon">📚</span>
+          <h2>DocuMind AI</h2>
+        </div>
 
-        <aside class="sidebar">
-            <div class="brand">
-                <span class="brand-icon">📚</span>
-                <h2>DocuMind AI</h2>
+        <p class="sidebar-description">Your intelligent PDF assistant</p>
+
+        <section class="upload-section">
+          <h3>Upload Document</h3>
+          <input type="file" id="pdf-input" accept=".pdf" />
+          <button type="button" id="upload-btn">Upload PDF</button>
+          <p id="upload-status" class="status-message"></p>
+        </section>
+
+        <section class="documents-section">
+          <h3>Your Documents</h3>
+          <div id="document-list">
+            <p class="muted">Loading documents...</p>
+          </div>
+        </section>
+
+        <div class="sidebar-footer">
+          <span id="backend-status">Checking backend...</span>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <h1>Document Assistant</h1>
+            <p>Ask questions and get answers from your PDFs.</p>
+          </div>
+
+          <select id="document-filter">
+            <option value="">All documents</option>
+          </select>
+          <div class="theme-selector">
+            <label for="theme-select">Appearance</label>
+
+            <select id="theme-select" aria-label="Choose appearance">
+              <option value="light">☀️ Light</option>
+              <option value="dark">🌙 Dark</option>
+              <option value="system">💻 System</option>
+            </select>
+          </div>
+        </header>
+
+        <nav class="tabs">
+          <button class="tab active" data-tab="chat">Chat</button>
+          <button class="tab" data-tab="search">Semantic Search</button>
+        </nav>
+
+        <section id="chat-panel" class="panel active">
+          <div id="chat-messages" class="chat-messages">
+            <div class="welcome-message">
+              <h2>Welcome to DocuMind AI 👋</h2>
+              <p>Upload a PDF and ask me anything about its contents.</p>
             </div>
+          </div>
 
-            <p class="sidebar-description">
-                Your intelligent PDF assistant
-            </p>
+          <form id="chat-form" class="chat-form">
+            <input
+              type="text"
+              id="question-input"
+              placeholder="Ask a question about your documents..."
+              minlength="3"
+              required
+            />
+            <button type="submit" id="send-btn">Send</button>
+          </form>
+        </section>
 
-            <section class="upload-section">
-                <h3>Upload Document</h3>
-                <input type="file" id="pdf-input" accept=".pdf">
-                <button type="button" id="upload-btn">Upload PDF</button>
-                <p id="upload-status" class="status-message"></p>
-            </section>
+        <section id="search-panel" class="panel">
+          <h2>Semantic Search</h2>
+          <p>Find relevant passages across your uploaded documents.</p>
 
-            <section class="documents-section">
-                <h3>Your Documents</h3>
-                <div id="document-list">
-                    <p class="muted">Loading documents...</p>
-                </div>
-            </section>
+          <form id="search-form">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Enter a search query..."
+              minlength="3"
+              required
+            />
+            <button type="submit">Search</button>
+          </form>
 
-            <div class="sidebar-footer">
-                <span id="backend-status">Checking backend...</span>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <header class="topbar">
-                <div>
-                    <h1>Document Assistant</h1>
-                    <p>Ask questions and get answers from your PDFs.</p>
-                </div>
-
-                <select id="document-filter">
-                    <option value="">All documents</option>
-                </select>
-            </header>
-
-            <nav class="tabs">
-                <button class="tab active" data-tab="chat">Chat</button>
-                <button class="tab" data-tab="search">Semantic Search</button>
-            </nav>
-
-            <section id="chat-panel" class="panel active">
-                <div id="chat-messages" class="chat-messages">
-                    <div class="welcome-message">
-                        <h2>Welcome to DocuMind AI 👋</h2>
-                        <p>Upload a PDF and ask me anything about its contents.</p>
-                    </div>
-                </div>
-
-                <form id="chat-form" class="chat-form">
-                    <input
-                        type="text"
-                        id="question-input"
-                        placeholder="Ask a question about your documents..."
-                        minlength="3"
-                        required
-                    >
-                    <button type="submit" id="send-btn">Send</button>
-                </form>
-            </section>
-
-            <section id="search-panel" class="panel">
-                <h2>Semantic Search</h2>
-                <p>Find relevant passages across your uploaded documents.</p>
-
-                <form id="search-form">
-                    <input
-                        type="text"
-                        id="search-input"
-                        placeholder="Enter a search query..."
-                        minlength="3"
-                        required
-                    >
-                    <button type="submit">Search</button>
-                </form>
-
-                <div id="search-results"></div>
-            </section>
-        </main>
+          <div id="search-results"></div>
+        </section>
+      </main>
     </div>
 
     <script src="/static/js/api.js"></script>
     <script src="/static/js/documents.js"></script>
     <script src="/static/js/chat.js"></script>
     <script src="/static/js/app.js"></script>
-</body>
+  </body>
 </html>

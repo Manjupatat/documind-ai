@@ -170,5 +170,43 @@ async function sendQuestion(event) {
 }
 
 function initializeChat() {
+  initializeTheme();
   chatForm.addEventListener("submit", sendQuestion);
 }
+
+
+/* =================================
+   DOCUMIND AI THEME MANAGEMENT
+================================= */
+
+function initializeTheme() {
+    const themeSelect = document.getElementById("theme-select");
+
+    if (!themeSelect) return;
+
+    // Restore previously selected theme
+    const savedTheme = localStorage.getItem("documind-theme");
+
+    const validThemes = ["light", "dark", "system"];
+
+    const currentTheme = validThemes.includes(savedTheme)
+        ? savedTheme
+        : "system";
+
+    // Apply theme
+    function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+
+        localStorage.setItem("documind-theme", theme);
+    }
+
+    // Set initial selection
+    themeSelect.value = currentTheme;
+    applyTheme(currentTheme);
+
+    // Listen for theme changes
+    themeSelect.addEventListener("change", function () {
+        applyTheme(this.value);
+    });
+}
+

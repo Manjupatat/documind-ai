@@ -703,4 +703,179 @@ button:disabled {
 }
 
 
+/* =================================
+   DOCUMIND AI THEME SYSTEM
+================================= */
+
+:root {
+    color-scheme: light;
+
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --surface-alt: #f0f3f8;
+    --text: #202938;
+    --muted: #697586;
+    --border: #e1e6ef;
+    --accent: #5265df;
+    --accent-hover: #4053ca;
+    --user-message: #e8edff;
+    --assistant-message: #ffffff;
+    --input-bg: #ffffff;
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* DARK THEME */
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --bg: #111827;
+    --surface: #1f2937;
+    --surface-alt: #283548;
+    --text: #f3f4f6;
+    --muted: #a5b0c0;
+    --border: #374151;
+    --accent: #818cf8;
+    --accent-hover: #6366f1;
+    --user-message: #303e64;
+    --assistant-message: #1f2937;
+    --input-bg: #283548;
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* SYSTEM THEME - FOLLOW OS PREFERENCE */
+
+@media (prefers-color-scheme: dark) {
+    :root[data-theme="system"] {
+        color-scheme: dark;
+
+        --bg: #111827;
+        --surface: #1f2937;
+        --surface-alt: #283548;
+        --text: #f3f4f6;
+        --muted: #a5b0c0;
+        --border: #374151;
+        --accent: #818cf8;
+        --accent-hover: #6366f1;
+        --user-message: #303e64;
+        --assistant-message: #1f2937;
+        --input-bg: #283548;
+        --shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    }
+}
+
+/* GLOBAL APPLICATION */
+
+body,
+.app-container {
+    background: var(--bg);
+    color: var(--text);
+    transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* SIDEBAR AND PANELS */
+
+.sidebar,
+.panel,
+#chat-panel {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+/* CHAT MESSAGES */
+
+#chat-messages {
+    background: var(--bg);
+}
+
+.message.user .message-content {
+    background: var(--user-message);
+    color: var(--text);
+}
+
+.message.assistant .message-content {
+    background: var(--assistant-message);
+    color: var(--text);
+}
+
+/* SOURCES */
+
+.source-container,
+.source-card {
+    background: var(--surface-alt);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+.source-card span,
+.source-card p {
+    color: var(--muted);
+}
+
+/* INPUT AREA */
+
+.chat-form {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+.chat-form input,
+#question-input {
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+#question-input::placeholder {
+    color: var(--muted);
+}
+
+/* BUTTONS */
+
+#send-btn {
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+}
+
+#send-btn:hover {
+    background: var(--accent-hover);
+}
+
+/* THEME SELECTOR */
+
+.theme-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.theme-selector label {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#theme-select {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+    font-size: 14px;
+}
+
+#theme-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--user-message);
+}
+
+#theme-select option {
+    background: var(--surface);
+    color: var(--text);
+}
+
 
