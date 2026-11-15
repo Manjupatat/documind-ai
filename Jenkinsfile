@@ -16,7 +16,10 @@ pipeline {
 
         stage('Validate Python') {
             steps {
-                sh 'python3.13 -m compileall -q app'
+                sh '''
+                    python3 --version
+                    python3 -m compileall -q app
+                    '''
             }
         }
 
