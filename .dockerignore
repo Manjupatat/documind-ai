@@ -1,0 +1,21 @@
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.env
+.env.*
+!.env.example
+.ipynb_checkpoints
+.DS_Store
+
+# Local generated data (verify before excluding)
+chroma_db/
+uploads/
+data/
+
+# Documentation and development files
+README.md
